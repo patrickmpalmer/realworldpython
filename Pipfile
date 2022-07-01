@@ -13,6 +13,7 @@ pandas = "*"
 sympy = "*"
 nose = "*"
 plotly = "*"
+opencv-contrib-python = "*"
 
 [dev-packages]
 
