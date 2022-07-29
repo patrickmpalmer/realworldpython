@@ -1,8 +1,10 @@
+from readline import get_history_item
 import sys
 import random
 import itertools
 import numpy as np
 import cv2 as cv
+import os
 
 MAP_FILE = 'cape_python.png'
 
@@ -152,22 +154,32 @@ def draw_menu(search_num):
         """
         )
 
+def autosearcher1(target_probabilities):
+    """Makes selection for search area automatically based of the area with the highest Target Probability"""
+    highest_prob = max(target_probabilities)
+    idx_highest = target_probabilities.index(highest_prob)
+    return idx_highest+1
 
-def main():
+def autosearcher2(target_probabilities):
+    """Makes selection for search area based of sum of the two highest probability areas"""
+    return int(np.argmax([target_probabilities[0]+target_probabilities[1], target_probabilities[0]+target_probabilities[2], target_probabilities[1]+target_probabilities[2]]))+4
+
+def main(iterations, search_nums):
     app = Search('Cape_Python')
-    app.draw_map(last_known=(160, 290))
+    #app.draw_map(last_known=(160, 290))
     sailor_x, sailor_y = app.sailor_final_location(num_search_areas=3)
-    print("-" * 65)
-    print("\nInitial Target (P) Probabilities:")
-    print("P1 = {:.3f}, P2 = {:.3f}, P3 = {:.3f}".format(app.p1, app.p2, app.p3))
+    #print("-" * 65)
+    #print("\nInitial Target (P) Probabilities:")
+    #print("P1 = {:.3f}, P2 = {:.3f}, P3 = {:.3f}".format(app.p1, app.p2, app.p3))
     search_num = 1
 
     while True:
-        app.calc_search_effectiveness()
-        draw_menu(search_num)
-        choice = input("Choice: ")
 
-        if choice == "0":
+        app.calc_search_effectiveness()
+        # draw_menu(search_num)
+        choice = str(autosearcher1([app.p1, app.p2, app.p3]))
+        # print("choice" + choice)
+        if iterations == 500:
             sys.exit()
 
         elif choice == "1":
@@ -215,26 +227,34 @@ def main():
 
         app.revise_target_probs()  # Use Bayes' rule to update target probs.
 
-        print("\nSearch {} Results 1 = {}"
-              .format(search_num, results_1), file=sys.stderr)
-        print("Search {} Results 2 = {}\n"
-              .format(search_num, results_2), file=sys.stderr)
-        print("Search {} Effectiveness (E):".format(search_num))
-        print("E1 = {:.3f}, E2 = {:.3f}, E3 = {:.3f}"
-              .format(app.sep1, app.sep2, app.sep3))
+        ##print("\nSearch {} Results 1 = {}"
+        ##      .format(search_num, results_1), file=sys.stderr)
+        ##print("Search {} Results 2 = {}\n"
+        ##      .format(search_num, results_2), file=sys.stderr)
+        ##print("Search {} Effectiveness (E):".format(search_num))
+        ##print("E1 = {:.3f}, E2 = {:.3f}, E3 = {:.3f}"
+        ##      .format(app.sep1, app.sep2, app.sep3))
 
         # Print target probabilities if sailor is not found else show position.
         if results_1 == 'Not Found' and results_2 == 'Not Found':
-            print("\nNew Target Probabilities (P) for Search {}:"
-                  .format(search_num + 1))
-            print("P1 = {:.3f}, P2 = {:.3f}, P3 = {:.3f}"
-                  .format(app.p1, app.p2, app.p3))
+            pass
+            #print("\nNew Target Probabilities (P) for Search {}:"
+            #      .format(search_num + 1))
+            #print("P1 = {:.3f}, P2 = {:.3f}, P3 = {:.3f}"
+            #      .format(app.p1, app.p2, app.p3))
         else:
-            cv.circle(app.img, (sailor_x, sailor_y), 3, (255, 0, 0), -1)
-            cv.imshow('Search Area', app.img)
-            cv.waitKey(1500)
-            main()
+            #cv.circle(app.img, (sailor_x, sailor_y), 3, (255, 0, 0), -1)
+            #cv.imshow('Search Area', app.img)
+            #cv.waitKey(1500)
+            os.system('clear')
+            iterations += 1
+            search_nums.append(search_num)
+            print("Iterations: " + str(iterations))
+            print("Average search num:" + str(sum(search_nums)/len(search_nums)))
+            main(iterations, search_nums)
         search_num += 1
 
 if __name__ == '__main__':
-    main()
+    iterations = 0
+    search_nums = []
+    main(iterations, search_nums)
